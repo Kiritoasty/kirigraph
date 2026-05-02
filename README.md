@@ -12,7 +12,8 @@ the custom title bar uses `-webkit-app-region: drag` on the bar itself with `-we
  
 
 the dropdown menus animate using transform: scaleY() with transform-origin: top center rather than height or max-height animations, which means the browser can composite the animation on the gpu instead of triggering layout recalculations on every frame.
-there are no runtime dependencies. everything is either built into electron or node.js's standard library. the only devdependencies are electron itself and electron-builder for packaging.# how to install kirigraph
+there are no runtime dependencies. everything is either built into electron or node.js's standard library. the only devdependencies are electron itself and electron-builder for packaging.
+# how to install kirigraph
 when you want to install kirigraph, inside of the website ( https://kiritoasty.dev/kirigraph/ ), you will see a .zip file (portable) that you will have to extract, most of operating systems will have that built by default (duh) and you will be able to just use that.
 after extracting it, go into the dist folder and then go into the Kirigraph Setup (version).exe and click next on all of the prompts unless you want to install it to a different directory (not recommended if generally using it, doing the default program files destination is better for most use cases)
 # how to build kirigraph from source
