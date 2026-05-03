@@ -1,21 +1,53 @@
 # kirigraph
- 
-kirigraph is a minimal dark text editor built on electron and node.js. it's designed to behave like a real native app rather than a web page stuffed into a window.
 
-# code wise terms
 
-currently, there will be none because of the fact that i have been constantly writing this but every single ai text detector wants to be a struggle and say that my text looks 100% ai generated even though it's not.
 
-# build kirigraph from source
+kirigraph is a weirdly cool text editor (my first electron project) that has very few dependencies and has a soothing feel because of rendering optimizations with electron so animations dont BALL OUT inside of tears to the gpu because you haven't optimized your keyframe css.
+
+# code wise explanation
+
+you will find an explanation about the code inside of here if you are familiar with electron but dont want to read the code its self.
+
+## save system
+
+currentFilePath is managed by the main process, non-synced with the renderer. the renderer sends your awesome face content and gets a file path back. this keeps things fairly simple and prevents silent save failures which is a pretty common struggle in the creation of MOST of electron apps.
+
+## custom title bar
+
+uses -webkit-app-region: drag on the bar and -webkit-app-region: no-drag on the window control buttons. made to work like a native title bar without the default os title bar getting in the way that doesn't look so nice on applications like this.
+
+## dropdown animations
+
+dropdowns use transform: scaleY() with transform-origin: top center instead of height or max-height as their keyframe css. using this method optimizes the animation to the gpu and skips layout redoings every frame you use this app, so it stays smooth.
+
+## dependencies
+
+no runtime dependencies at all. everything relies on electron or node's standard library. only dev dependencies are electron and electron-builder for packaging.
+
+
+
+# build kirigraph from the ground up
+
+
 
 inside of here, you will get a script that you can use to build kirigraph from source. doing it is easy because of how low the code-amount is.
-```
-git clone https://github.com/Kiritoasty/kirigraph.git
-cd kirigraph
-cd electron-builder
-npm install
+
 ```
 
+git clone https://github.com/Kiritoasty/kirigraph.git
+
+cd kirigraph
+
+cd electron-builder
+
+npm install
+
+```
+
+
+
 other commands to use if building from source:
+
 - `npm run build` (run with administrator, this creates the installer with the icon.ico you have in the folder for electron-builder.)
+
 - `npm start` (test the application, this will open up electron and start the application with it if needing to test)
