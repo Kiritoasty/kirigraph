@@ -3,12 +3,12 @@
 kirigraph is a minimal dark text editor built on electron and node.js. it's designed to behave like a real native app rather than a web page stuffed into a window.
  
 ## code-wise terms
-the save system keeps `currentFilePath` owned entirely by the main process rather than syncing it between main and renderer. the renderer just passes content through and gets a file path back. this means the two processes can never disagree about where a file lives, which is a common source of silent save failures in beginner electron apps.
+the save system keeps `currentFilePath` owned entirely by the main task rather than syncing it between main and renderer. the renderer passes content through and than gets a file path back. this means the two tasks can never have bad recognition where a file lives, which is a common source of silent save failures in beginner electron apps.
  
 the custom title bar uses `-webkit-app-region: drag` on the bar itself with `-webkit-app-region: no-drag` carved out for the window control buttons, which lets it behave exactly like a native title bar without any of the default os chrome.
  
 
-the dropdown menus animate using transform: scaleY() with transform-origin: top center rather than height or max-height animations, which means the browser can composite the animation on the gpu instead of triggering layout recalculations on every frame.
+the dropdown menus animate using transform: scaleY() with transform-origin: top center rather than height or max-height animations, which means the browser can composite the animation on the gpu instead of triggering layout redoings on every frame.
 there are no runtime dependencies. everything is either built into electron or node.js's standard library. the only devdependencies are electron itself and electron-builder for packaging.
 # how to install kirigraph
 when you want to install kirigraph, inside of the website ( https://kiritoasty.dev/kirigraph/ ), you will see a .zip file (portable) that you will have to extract, most of operating systems will have that built by default (duh) and you will be able to just use that.
