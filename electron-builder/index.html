@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KiriGraph</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #1a1a1a;
+      --surface: #242424;
+      --surface2: #2e2e2e;
+      --surface3: #383838;
+      --border: #333;
+      --border-light: #444;
+      --text: #d4d4d4;
+      --text-dim: #888;
+      --text-dimmer: #555;
+      --highlight: #3a3a3a;
+      --highlight-strong: #484848;
+      --menu-bg: #222;
+      --menu-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      --radius: 4px;
+      --font: sans-serif;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 13px;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #titlebar {
+      height: 32px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      -webkit-app-region: drag;
+      position: relative;
+      z-index: 200;
+      flex-shrink: 0;
+    }
+
+    #titlebar-title {
+      font-size: 12px;
+      font-weight: normal;
+      color: var(--text-dim);
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #window-controls {
+      display: flex;
+      margin-left: auto;
+      height: 100%;
+      -webkit-app-region: no-drag;
+    }
+
+    .wc-btn {
+      width: 42px;
+      height: 100%;
+      border: none;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: var(--font);
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: none;
+    }
+
+    .wc-btn:hover { background: var(--highlight); color: var(--text); }
+    .wc-btn.close:hover { background: var(--highlight-strong); color: var(--text); }
+
+    #menubar {
+      height: 28px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      padding: 0 4px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 150;
+    }
+
+    .menu-item {
+      padding: 3px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      position: relative;
+      transition: none;
+    }
+
+    .menu-item:hover { background: var(--highlight); }
+    .menu-item.active { background: var(--highlight-strong); }
+
+    .dropdown {
+      position: absolute;
+      top: calc(100% + 2px);
+      left: 0;
+      min-width: 210px;
+      background: var(--menu-bg);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      box-shadow: var(--menu-shadow);
+      z-index: 1000;
+      padding: 3px;
+      overflow: hidden;
+      transform-origin: top center;
+      transform: scaleY(0);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+    }
+
+    .dropdown.open {
+      transform: scaleY(1);
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .dd-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text);
+      transition: none;
+    }
+
+    .dd-item:hover { background: var(--highlight); }
+    .dd-item.disabled { color: var(--text-dimmer); cursor: default; pointer-events: none; }
+
+    .dd-item-label {
+      display: flex;
+      align-items: center;
+    }
+
+    .dd-checkmark {
+      width: 14px;
+      margin-right: 4px;
+      font-size: 11px;
+      color: var(--text);
+      opacity: 0;
+      display: inline-block;
+    }
+
+    .dd-checkmark.visible { opacity: 1; }
+
+    .dd-item .shortcut {
+      color: var(--text-dimmer);
+      font-size: 12px;
+      margin-left: 20px;
+    }
+
+    .dd-separator {
+      height: 1px;
+      background: var(--border);
+      margin: 3px 6px;
+    }
+
+    #editor-wrap {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #editor-wrap.focused {
+      outline: 1px solid var(--border-light);
+      outline-offset: -1px;
+    }
+
+    #editor {
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px 20px;
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      caret-color: var(--text);
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface3) transparent;
+      user-select: text;
+      -webkit-user-select: text;
+      transition: none;
+    }
+
+    #editor::placeholder { color: var(--text-dimmer); }
+    #editor::selection { background: var(--highlight-strong); }
+
+    #editor::-webkit-scrollbar { width: 8px; }
+    #editor::-webkit-scrollbar-track { background: transparent; }
+    #editor::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+    #editor::-webkit-scrollbar-thumb:hover { background: var(--highlight-strong); }
+
+    #editor.nowrap {
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    #statusbar {
+      height: 22px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      font-size: 11px;
+      color: var(--text-dimmer);
+      flex-shrink: 0;
+      gap: 16px;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      display: none;
+    }
+
+    #overlay.active { display: block; }
+
+    #zoom-indicator {
+      position: fixed;
+      bottom: 36px;
+      right: 18px;
+      background: var(--surface2);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius);
+      padding: 3px 10px;
+      font-size: 12px;
+      color: var(--text);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 500;
+      transition: none;
+    }
+
+    #zoom-indicator.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+
+  <div id="titlebar">
+    <span id="titlebar-title">Untitled - KiriGraph</span>
+    <div id="window-controls">
+      <button class="wc-btn" id="btn-min" title="Minimize">&#8212;</button>
+      <button class="wc-btn" id="btn-max" title="Maximize">&#9633;</button>
+      <button class="wc-btn close" id="btn-close" title="Close">&#10005;</button>
+    </div>
+  </div>
+
+  <div id="menubar">
+
+    <div class="menu-item" id="menu-file">File
+      <div class="dropdown" id="dd-file">
+        <div class="dd-item" id="dd-new">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>New</span>
+          <span class="shortcut">Ctrl+N</span>
+        </div>
+        <div class="dd-item" id="dd-open">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Open...</span>
+          <span class="shortcut">Ctrl+O</span>
+        </div>
+        <div class="dd-separator"></div>
+        <div class="dd-item" id="dd-save">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Save</span>
+          <span class="shortcut">Ctrl+S</span>
+        </div>
+        <div class="dd-item" id="dd-saveas">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Save As...</span>
+          <span class="shortcut">Ctrl+Shift+S</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" id="menu-edit">Edit
+      <div class="dropdown" id="dd-edit">
+        <div class="dd-item" id="dd-undo">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Undo</span>
+          <span class="shortcut">Ctrl+Z</span>
+        </div>
+        <div class="dd-item" id="dd-redo">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Redo</span>
+          <span class="shortcut">Ctrl+Y</span>
+        </div>
+        <div class="dd-separator"></div>
+        <div class="dd-item" id="dd-cut">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Cut</span>
+          <span class="shortcut">Ctrl+X</span>
+        </div>
+        <div class="dd-item" id="dd-copy">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Copy</span>
+          <span class="shortcut">Ctrl+C</span>
+        </div>
+        <div class="dd-item" id="dd-paste">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Paste</span>
+          <span class="shortcut">Ctrl+V</span>
+        </div>
+        <div class="dd-separator"></div>
+        <div class="dd-item" id="dd-selectall">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Select All</span>
+          <span class="shortcut">Ctrl+A</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" id="menu-view">View
+      <div class="dropdown" id="dd-view">
+        <div class="dd-item" id="dd-zoomin">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Zoom In</span>
+          <span class="shortcut">Ctrl++</span>
+        </div>
+        <div class="dd-item" id="dd-zoomout">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Zoom Out</span>
+          <span class="shortcut">Ctrl+-</span>
+        </div>
+        <div class="dd-item" id="dd-zoomreset">
+          <span class="dd-item-label"><span class="dd-checkmark"></span>Reset Zoom</span>
+          <span class="shortcut">Ctrl+0</span>
+        </div>
+        <div class="dd-separator"></div>
+        <div class="dd-item" id="dd-wordwrap">
+          <span class="dd-item-label"><span class="dd-checkmark" id="check-wordwrap">&#10003;</span>Word Wrap</span>
+        </div>
+        <div class="dd-item" id="dd-statusbar">
+          <span class="dd-item-label"><span class="dd-checkmark visible" id="check-statusbar">&#10003;</span>Status Bar</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="editor-wrap">
+    <textarea id="editor" placeholder="Start typing..." spellcheck="true"></textarea>
+  </div>
+
+  <div id="statusbar">
+    <span class="status-item" id="status-lines">Ln 1, Col 1</span>
+    <span class="status-item" id="status-chars">0 characters</span>
+    <span class="status-item" id="status-zoom" style="margin-left: auto;">100%</span>
+  </div>
+
+</div>
+
+<div id="overlay"></div>
+<div id="zoom-indicator">100%</div>
+
+<script>
+  const { ipcRenderer } = require('electron');
+
+  let hasChanges = false;
+  let currentFile = null;
+  let wordWrap = true;
+  let showStatusBar = true;
+  let fontSize = 14;
+  let openMenu = null;
+  let zoomTimeout = null;
+
+  const editor = document.getElementById('editor');
+  const editorWrap = document.getElementById('editor-wrap');
+  const titlebarTitle = document.getElementById('titlebar-title');
+  const statusLines = document.getElementById('status-lines');
+  const statusChars = document.getElementById('status-chars');
+  const statusZoom = document.getElementById('status-zoom');
+  const statusbar = document.getElementById('statusbar');
+  const overlay = document.getElementById('overlay');
+  const zoomIndicator = document.getElementById('zoom-indicator');
+  const checkWordwrap = document.getElementById('check-wordwrap');
+  const checkStatusbar = document.getElementById('check-statusbar');
+
+  document.getElementById('btn-min').addEventListener('click', () => ipcRenderer.send('window-minimize'));
+  document.getElementById('btn-max').addEventListener('click', () => ipcRenderer.send('window-maximize'));
+  document.getElementById('btn-close').addEventListener('click', () => ipcRenderer.send('window-close'));
+
+  ipcRenderer.on('window-state-change', (e, state) => {
+    document.getElementById('btn-max').textContent = state === 'maximized' ? '\u2750' : '\u25a1';
+  });
+
+  ipcRenderer.on('open-file', (e, { content, filePath }) => {
+    editor.value = content;
+    currentFile = filePath;
+    setTitle(filePath.split(/[\\/]/).pop());
+    setChanges(false);
+    updateStatus();
+  });
+
+  const menus = [
+    { trigger: 'menu-file', dropdown: 'dd-file' },
+    { trigger: 'menu-edit', dropdown: 'dd-edit' },
+    { trigger: 'menu-view', dropdown: 'dd-view' },
+  ];
+
+  function closeAllMenus() {
+    menus.forEach(m => {
+      document.getElementById(m.trigger).classList.remove('active');
+      document.getElementById(m.dropdown).classList.remove('open');
+    });
+    overlay.classList.remove('active');
+    openMenu = null;
+  }
+
+  menus.forEach(m => {
+    const trigger = document.getElementById(m.trigger);
+    const dropdown = document.getElementById(m.dropdown);
+    trigger.addEventListener('click', e => {
+      e.stopPropagation();
+      if (openMenu === m.dropdown) {
+        closeAllMenus();
+        return;
+      }
+      closeAllMenus();
+      trigger.classList.add('active');
+      dropdown.classList.add('open');
+      overlay.classList.add('active');
+      openMenu = m.dropdown;
+    });
+  });
+
+  overlay.addEventListener('click', closeAllMenus);
+
+  document.getElementById('dd-new').addEventListener('click', async () => {
+    closeAllMenus();
+    const res = await ipcRenderer.invoke('file-new', hasChanges);
+    if (res.action === 'cancel') return;
+    editor.value = '';
+    currentFile = null;
+    setTitle('Untitled');
+    setChanges(false);
+    updateStatus();
+    editor.focus();
+  });
+
+  document.getElementById('dd-open').addEventListener('click', async () => {
+    closeAllMenus();
+    const res = await ipcRenderer.invoke('file-open');
+    if (!res) return;
+    editor.value = res.content;
+    currentFile = res.filePath;
+    setTitle(res.filePath.split(/[\\/]/).pop());
+    setChanges(false);
+    updateStatus();
+    editor.focus();
+  });
+
+  document.getElementById('dd-save').addEventListener('click', async () => {
+    closeAllMenus();
+    const res = await ipcRenderer.invoke('file-save', editor.value);
+    if (res) {
+      currentFile = res.filePath;
+      setTitle(res.filePath.split(/[\\/]/).pop());
+      setChanges(false);
+    }
+  });
+
+  document.getElementById('dd-saveas').addEventListener('click', async () => {
+    closeAllMenus();
+    const res = await ipcRenderer.invoke('file-save-as', editor.value);
+    if (res) {
+      currentFile = res.filePath;
+      setTitle(res.filePath.split(/[\\/]/).pop());
+      setChanges(false);
+    }
+  });
+
+  document.getElementById('dd-undo').addEventListener('click', () => {
+    closeAllMenus();
+    document.execCommand('undo');
+    editor.focus();
+  });
+
+  document.getElementById('dd-redo').addEventListener('click', () => {
+    closeAllMenus();
+    document.execCommand('redo');
+    editor.focus();
+  });
+
+  document.getElementById('dd-cut').addEventListener('click', () => {
+    closeAllMenus();
+    document.execCommand('cut');
+    editor.focus();
+  });
+
+  document.getElementById('dd-copy').addEventListener('click', () => {
+    closeAllMenus();
+    document.execCommand('copy');
+    editor.focus();
+  });
+
+  document.getElementById('dd-paste').addEventListener('click', () => {
+    closeAllMenus();
+    editor.focus();
+    document.execCommand('paste');
+  });
+
+  document.getElementById('dd-selectall').addEventListener('click', () => {
+    closeAllMenus();
+    editor.select();
+    editor.focus();
+  });
+
+  document.getElementById('dd-zoomin').addEventListener('click', () => { closeAllMenus(); adjustZoom(1); });
+  document.getElementById('dd-zoomout').addEventListener('click', () => { closeAllMenus(); adjustZoom(-1); });
+  document.getElementById('dd-zoomreset').addEventListener('click', () => { closeAllMenus(); resetZoom(); });
+
+  document.getElementById('dd-wordwrap').addEventListener('click', () => {
+    wordWrap = !wordWrap;
+    editor.classList.toggle('nowrap', !wordWrap);
+    checkWordwrap.textContent = wordWrap ? '\u2713' : '';
+    checkWordwrap.classList.toggle('visible', wordWrap);
+    closeAllMenus();
+  });
+
+  document.getElementById('dd-statusbar').addEventListener('click', () => {
+    showStatusBar = !showStatusBar;
+    statusbar.style.display = showStatusBar ? 'flex' : 'none';
+    checkStatusbar.textContent = showStatusBar ? '\u2713' : '';
+    checkStatusbar.classList.toggle('visible', showStatusBar);
+    closeAllMenus();
+  });
+
+  function adjustZoom(dir) {
+    const sizes = [10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 22, 24, 26, 28, 32, 36, 40, 48];
+    const idx = sizes.indexOf(fontSize);
+    fontSize = sizes[Math.max(0, Math.min(sizes.length - 1, idx + dir))];
+    applyZoom();
+  }
+
+  function resetZoom() {
+    fontSize = 14;
+    applyZoom();
+  }
+
+  function applyZoom() {
+    editor.style.fontSize = fontSize + 'px';
+    const pct = Math.round((fontSize / 14) * 100) + '%';
+    statusZoom.textContent = pct;
+    zoomIndicator.textContent = pct;
+    zoomIndicator.classList.add('show');
+    clearTimeout(zoomTimeout);
+    zoomTimeout = setTimeout(() => zoomIndicator.classList.remove('show'), 1000);
+  }
+
+  editor.addEventListener('input', () => {
+    setChanges(true);
+    updateStatus();
+  });
+
+  editor.addEventListener('keyup', updateStatus);
+  editor.addEventListener('click', updateStatus);
+  editor.addEventListener('focus', () => editorWrap.classList.add('focused'));
+  editor.addEventListener('blur', () => editorWrap.classList.remove('focused'));
+
+  function updateStatus() {
+    const text = editor.value;
+    const before = text.slice(0, editor.selectionStart);
+    const lines = before.split('\n');
+    statusLines.textContent = 'Ln ' + lines.length + ', Col ' + (lines[lines.length - 1].length + 1);
+    statusChars.textContent = text.length + ' character' + (text.length !== 1 ? 's' : '');
+  }
+
+  function setTitle(name) {
+    titlebarTitle.textContent = name + ' - KiriGraph';
+    document.title = name + ' - KiriGraph';
+  }
+
+  function setChanges(v) {
+    hasChanges = v;
+  }
+
+
+  document.addEventListener('keydown', async e => {
+    if (!e.ctrlKey) {
+      if (e.key === 'Escape') closeAllMenus();
+      return;
+    }
+    switch (e.key) {
+      case 'n':
+      case 'N':
+        e.preventDefault();
+        document.getElementById('dd-new').click();
+        break;
+      case 'o':
+      case 'O':
+        e.preventDefault();
+        document.getElementById('dd-open').click();
+        break;
+      case 's':
+      case 'S':
+        e.preventDefault();
+        if (e.shiftKey) document.getElementById('dd-saveas').click();
+        else document.getElementById('dd-save').click();
+        break;
+      case '+':
+      case '=':
+        e.preventDefault();
+        adjustZoom(1);
+        break;
+      case '-':
+        e.preventDefault();
+        adjustZoom(-1);
+        break;
+      case '0':
+        e.preventDefault();
+        resetZoom();
+        break;
+    }
+  });
+
+  updateStatus();
+  editor.focus();
+</script>
+
+</body>
+</html>
