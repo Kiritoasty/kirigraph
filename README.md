@@ -3,16 +3,11 @@
 kirigraph is a minimal dark text editor built on electron and node.js. it's designed to behave like a real native app rather than a web page stuffed into a window.
  
 ## code-wise terms
-the save system keeps `currentFilePath` owned entirely by the main task rather than syncing it between main and renderer. the renderer passes content through and than gets a file path back. this means the two tasks can never have bad recognition where a file lives, which is a common source of silent save failures in beginner electron apps.
- 
-the custom title bar uses `-webkit-app-region: drag` on the bar itself with `-webkit-app-region: no-drag` carved out for the window control buttons, which lets it behave exactly like a native title bar without any of the default os chrome.
- 
+the save system keeps the currentFilePath completely under the control of the main task, instead of trying to sync it between the main and renderer processes. the renderer sends content through and then receives a file path in return. this setup ensures that both tasks always know exactly where a file is located, which helps prevent the silent save failures that often trip up beginners working with electron apps.
 
-the dropdown menus animate using transform: scaleY() with transform-origin: top center rather than height or max-height animations, which means the browser can composite the animation on the gpu instead of triggering layout redoings on every frame.
-there are no runtime dependencies. everything is either built into electron or node.js's standard library. the only devdependencies are electron itself and electron-builder for packaging.
-# how to install kirigraph
-when you want to install kirigraph, inside of the website ( https://kiritoasty.dev/kirigraph/ ), you will see a .zip file (portable) that you will have to extract, most of operating systems will have that built by default (duh) and you will be able to just use that.
-after extracting it, go into the dist folder and then go into the Kirigraph Setup (version).exe and click next on all of the prompts unless you want to install it to a different directory (not recommended if generally using it, doing the default program files destination is better for most use cases)
+for the custom title bar, this uses -webkit-app-region: drag on the bar itself, while -webkit-app-region: no-drag is applied to the window control buttons. this allows it to function just like a native title bar, without any of the default OS chrome getting in the way.
+
+The dropdown menus animate using transform: scaleY() with transform-origin set to top center, rather than relying on height or max-height animations. This approach lets the browser handle the animation on the GPU, avoiding the need for layout recalculations on every frame. there are no runtime dependencies. everything is either part of Electron or included in node.js's standard library. The only development dependencies are Electron itself and electron-builder for packaging.
 # how to build kirigraph from source
 building kirigraph from source is very simple. all you will need is `npm` and `git` (if you want to build this from source on windows, then get the lts node version from https://nodejs.org, and get git for windows from https://git-scm.com/install/windows)
 here is the full script (use on powershell if using windows)
