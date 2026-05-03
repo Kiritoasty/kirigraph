@@ -17,3 +17,15 @@ there are no runtime dependencies. everything is either built into electron or n
 when you want to install kirigraph, inside of the website ( https://kiritoasty.dev/kirigraph/ ), you will see a .zip file (portable) that you will have to extract, most of operating systems will have that built by default (duh) and you will be able to just use that.
 after extracting it, go into the dist folder and then go into the Kirigraph Setup (version).exe and click next on all of the prompts unless you want to install it to a different directory (not recommended if generally using it, doing the default program files destination is better for most use cases)
 # how to build kirigraph from source
+building kirigraph from source is very simple. all you will need is `npm` and `git` (if you want to build this from source on windows, then get the lts node version from https://nodejs.org, and get git for windows from https://git-scm.com/install/windows)
+here is the full script (use on powershell if using windows)
+```
+git clone https://github.com/Kiritoasty/kirigraph.git
+cd kirigraph
+cd electron-builder
+npm install
+```
+
+other commands to use if building from source:
+- `npm run build` (run with administrator, this creates the installer with the icon.ico you have in the folder for electron-builder.)
+- `npm start` (test the application, this will open up electron and start the application with it if needing to test)
