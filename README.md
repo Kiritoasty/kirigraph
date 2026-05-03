@@ -10,7 +10,7 @@ you will find an explanation about the code inside of here if you are familiar w
 
 ## save system
 
-currentFilePath is managed by the main process, non-synced with the renderer. the renderer sends your awesome face content and gets a file path back. this keeps things fairly simple and prevents silent save failures which is a pretty common struggle in the creation of MOST of electron apps.
+when i was making this i decided that currentFilePath should be managed by the main process. doing this makes it non-synced with the renderer. the renderer sends your awesome face content and gets a file path back. this keeps things fairly simple and prevents silent save failures which is a pretty common struggle in the creation of MOST of electron apps.
 
 ## custom title bar
 
