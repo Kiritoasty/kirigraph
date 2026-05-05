@@ -105,7 +105,7 @@ ipcMain.handle('file-open', async () => {
     currentFilePath = filePath;
     return { content, filePath };
   } catch (e) {
-    dialog.showErrorBox('KiriGraph', 'Could not read file: ' + e.message);
+    dialog.showErrorBox('enceladus.editor', 'Could not read file: ' + e.message);
     return null;
   }
 });
@@ -116,7 +116,7 @@ ipcMain.handle('file-save', async (event, content) => {
       fs.writeFileSync(currentFilePath, content, 'utf8');
       return { filePath: currentFilePath };
     } catch (e) {
-      dialog.showErrorBox('KiriGraph', 'Could not save file: ' + e.message);
+      dialog.showErrorBox('enceladus.editor', 'Could not save file: ' + e.message);
       return null;
     }
   }
@@ -140,7 +140,7 @@ async function doSaveAs(content) {
     currentFilePath = result.filePath;
     return { filePath: result.filePath };
   } catch (e) {
-    dialog.showErrorBox('KiriGraph', 'Could not save file: ' + e.message);
+    dialog.showErrorBox('enceladus.editor', 'Could not save file: ' + e.message);
     return null;
   }
 }
