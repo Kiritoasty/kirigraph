@@ -32,13 +32,9 @@ no runtime dependencies at all. everything relies on electron or node's standard
 inside of here, you will get a script that you can use to build kirigraph from source. doing it is easy because of how low the code-amount is.
 
 ```
-
 git clone https://github.com/Kiritoasty/kirigraph.git
-
-cd kirigraph
-
+cd enceladus-editor
 cd electron-builder
-
 npm install
 
 ```
