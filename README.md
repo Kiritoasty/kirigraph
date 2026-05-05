@@ -1,8 +1,7 @@
-# kirigraph
+# enceladus.editor
 
 
-
-kirigraph is a weirdly cool text editor (my first electron project) that has very few dependencies and has a soothing feel because of rendering optimizations with electron so animations dont BALL OUT inside of tears to the gpu because you haven't optimized your keyframe css.
+enceladus.editor is a weirdly cool text editor (my first electron project) that has very few dependencies and has a soothing feel because of rendering optimizations with electron so animations dont BALL OUT inside of tears to the gpu because you haven't optimized your keyframe css.
 
 # code wise explanation
 
